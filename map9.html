@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>保育ルート記録ツール</title>
+  <style>
+    #map {
+      height: 80vh;
+      width: 100%;
+    }
+    #startBtn {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 10px 20px;
+      font-size: 16px;
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <button id="startBtn">記録開始</button>
+
+  <script>
+    let map;
+    let path = [];
+    let polyline;
+
+    // ページ読み込み時に位置情報を取得
+    window.onload = function() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          function(position) {
+            console.log("位置取得成功");
+          },
+          function(error) {
+            console.log("位置取得失敗", error);
+            alert("位置情報の取得に失敗しました。ブラウザの設定をご確認ください。");
+          }
+        );
+      } else {
+        alert("この端末では位置情報が利用できません");
+      }
+    };
+
+    function initMap() {
+      map = new google.maps.Map(document.getElementById("map"), {
+        center: { lat: 36.058, lng: 136.223 }, // 鯖江市周辺
+        zoom: 15,
+      });
+
+      polyline = new google.maps.Polyline({
+        path: path,
+        geodesic: true,
+        strokeColor: "#FF0000",
+        strokeOpacity: 1.0,
+        strokeWeight: 2,
+      });
+      polyline.setMap(map);
+    }
+
+    document.getElementById("startBtn").addEventListener("click", () => {
+      if (navigator.geolocation) {
+        navigator.geolocation.watchPosition(
+          (position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+            const newPoint = { lat, lng };
+            path.push(newPoint);
+            polyline.setPath(path);
+            map.panTo(newPoint);
+          },
+          (error) => {
+            alert("位置情報の取得に失敗しました：" + error.message);
+          },
+          { enableHighAccuracy: true }
+        );
+      } else {
+        alert("この端末では位置情報が利用できません");
+      }
+    });
+  </script>
+
+  <script async defer
+    src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY&callback=initMap">
+  </script>
+</body>
+</html>
